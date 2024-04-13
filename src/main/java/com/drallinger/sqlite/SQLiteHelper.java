@@ -19,26 +19,26 @@ public class SQLiteHelper {
         connectionUrl = String.format(BASE_CONNECTION_URL, builder.databaseFile);
         preparedStatementBlueprints = builder.preparedStatementBlueprints;
         functions = builder.functions;
-        if(!builder.tables.isEmpty()){
-            createTables(builder.tables);
+        if(!builder.tableBlueprints.isEmpty()){
+            createTables(builder.tableBlueprints);
         }
     }
 
     public static class Builder{
         private final String databaseFile;
-        private final ArrayList<TableBlueprint> tables;
+        private final ArrayList<TableBlueprint> tableBlueprints;
         private final HashMap<String, PreparedStatementBlueprint> preparedStatementBlueprints;
         private final HashMap<String, SQLiteFunction<?>> functions;
 
         private Builder(String databaseFile){
             this.databaseFile = databaseFile;
-            tables = new ArrayList<>();
+            tableBlueprints = new ArrayList<>();
             preparedStatementBlueprints = new HashMap<>();
             functions = new HashMap<>();
         }
 
         public Builder table(String tableName, boolean ifNotExists, String... columns){
-            tables.add(new TableBlueprint(tableName, ifNotExists, columns));
+            tableBlueprints.add(new TableBlueprint(tableName, ifNotExists, columns));
             return this;
         }
 
@@ -123,7 +123,7 @@ public class SQLiteHelper {
         HashMap<String, PreparedStatement> preparedStatements = new HashMap<>();
         for(String preparedStatementName : prepareStatementNames){
             if(!preparedStatementBlueprints.containsKey(preparedStatementName)){
-                System.err.printf("No prepare statement configured with the name \"%s\"%n", preparedStatementName);
+                System.err.printf("No prepared statement configured with the name \"%s\"%n", preparedStatementName);
                 System.exit(1);
             }
             PreparedStatementBlueprint preparedStatementBlueprint = preparedStatementBlueprints.get(preparedStatementName);
