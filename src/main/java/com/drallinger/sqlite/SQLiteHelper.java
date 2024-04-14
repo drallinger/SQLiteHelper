@@ -51,7 +51,7 @@ public class SQLiteHelper {
             return this;
         }
 
-        public Builder prepareStatement(String queryName, String query){
+        public Builder preparedStatement(String queryName, String query){
             return preparedStatement(queryName, query, false);
         }
 
