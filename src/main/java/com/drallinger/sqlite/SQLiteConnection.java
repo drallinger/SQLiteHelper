@@ -13,10 +13,11 @@ public class SQLiteConnection implements AutoCloseable{
     private final HashMap<String, PreparedStatement> preparedStatements;
     private final HashMap<String, SQLiteFunction<?>> functions;
 
-    public SQLiteConnection(Connection connection, HashMap<String, PreparedStatement> preparedStatements, HashMap<String, SQLiteFunction<?>> functions){
+    public SQLiteConnection(Connection connection, HashMap<String, PreparedStatement> preparedStatements, HashMap<String, SQLiteFunction<?>> functions, boolean autoCommit){
         this.connection = connection;
         this.preparedStatements = preparedStatements;
         this.functions = functions;
+        setAutoCommit(autoCommit);
     }
 
     public Optional<String> execute(String queryName, boolean returnKeys, SQLiteValue<?>... values){
@@ -94,7 +95,7 @@ public class SQLiteConnection implements AutoCloseable{
             setStatementValues(statement, values);
             try(ResultSet resultSet = statement.executeQuery()){
                 if(resultSet.next()){
-                    result = (resultSet.getInt(1) == 1);
+                    result = SQLiteValue.convertToBoolean(resultSet.getInt(1));
                 }
             }
         }catch (SQLException e){
