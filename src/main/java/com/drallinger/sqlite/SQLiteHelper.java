@@ -14,6 +14,7 @@ public class SQLiteHelper {
     private final String connectionUrl;
     private final HashMap<String, PreparedStatementBlueprint> preparedStatementBlueprints;
     private final HashMap<String, SQLiteFunction<?>> functions;
+    private final boolean autoCommit;
 
     private SQLiteHelper(Builder builder){
         connectionUrl = String.format(BASE_CONNECTION_URL, builder.databaseFile);
@@ -22,6 +23,7 @@ public class SQLiteHelper {
         if(!builder.tableBlueprints.isEmpty()){
             createTables(builder.tableBlueprints);
         }
+        autoCommit = builder.autoCommit;
     }
 
     public static class Builder{
@@ -29,12 +31,14 @@ public class SQLiteHelper {
         private final ArrayList<TableBlueprint> tableBlueprints;
         private final HashMap<String, PreparedStatementBlueprint> preparedStatementBlueprints;
         private final HashMap<String, SQLiteFunction<?>> functions;
+        private boolean autoCommit;
 
         private Builder(String databaseFile){
             this.databaseFile = databaseFile;
             tableBlueprints = new ArrayList<>();
             preparedStatementBlueprints = new HashMap<>();
             functions = new HashMap<>();
+            autoCommit = true;
         }
 
         public Builder table(String tableName, boolean ifNotExists, String... columns){
@@ -46,6 +50,10 @@ public class SQLiteHelper {
             return table(tableName, true, columns);
         }
 
+        public int getTableCount(){
+            return tableBlueprints.size();
+        }
+
         public Builder preparedStatement(String queryName, String query, boolean returnKeys){
             preparedStatementBlueprints.put(queryName, new PreparedStatementBlueprint(query, returnKeys));
             return this;
@@ -55,9 +63,26 @@ public class SQLiteHelper {
             return preparedStatement(queryName, query, false);
         }
 
+        public int getPreparedStatementCount(){
+            return preparedStatementBlueprints.size();
+        }
+
         public Builder function(String functionName, SQLiteFunction<?> function){
             functions.put(functionName, function);
             return this;
+        }
+
+        public int getFunctionCount(){
+            return functions.size();
+        }
+
+        public Builder autoCommit(boolean autoCommit){
+            this.autoCommit = autoCommit;
+            return this;
+        }
+
+        public boolean getAutoCommit(){
+            return autoCommit;
         }
 
         public SQLiteHelper build(){
@@ -78,7 +103,7 @@ public class SQLiteHelper {
         try{
             Connection connection = DriverManager.getConnection(connectionUrl);
             HashMap<String, PreparedStatement> preparedStatements = createPreparedStatements(connection, prepareStatementNames);
-            sqLiteConnection = new SQLiteConnection(connection, preparedStatements, functions);
+            sqLiteConnection = new SQLiteConnection(connection, preparedStatements, functions, autoCommit);
         }catch (SQLException e){
             e.printStackTrace();
             System.exit(1);
@@ -88,6 +113,18 @@ public class SQLiteHelper {
 
     public SQLiteConnection connect(){
         return connect(getAllPreparedStatementNames());
+    }
+
+    public int getPreparedStatementCount(){
+        return preparedStatementBlueprints.size();
+    }
+
+    public int getFunctionCount(){
+        return functions.size();
+    }
+
+    public boolean getAutoCommit(){
+        return autoCommit;
     }
 
     private void createTables(ArrayList<TableBlueprint> tables){
